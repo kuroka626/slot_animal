@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設定差あるとこ/外から見て分かるような事のみ</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:#111;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;line-height:1.7}
+header{position:sticky;top:0;z-index:1000;background:#1a1a1a;padding:12px;border-bottom:2px solid #d4af37}
+#search{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px}
+#suggestions{margin-top:8px;background:#222;border-radius:10px;overflow:hidden}
+.suggestion{padding:12px;border-bottom:1px solid #333;cursor:pointer}
+.suggestion:last-child{border-bottom:none}
+.index-bar{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:#181818;position:sticky;top:74px;z-index:999}
+.index-btn{background:#d4af37;color:#111;border:none;padding:8px 12px;border-radius:8px;font-weight:bold;cursor:pointer}
+.container{padding:15px}
+.section-title{margin:25px 0 15px;color:#d4af37;font-size:24px;scroll-margin-top:180px}
+.term-card{background:#1c1c1c;border-left:5px solid #d4af37;padding:16px;border-radius:12px;margin-bottom:15px;scroll-margin-top:180px}
+.term-title{font-size:22px;color:#d4af37}
+.term-reading{font-size:13px;opacity:.7;margin:4px 0 10px}
+</style>
+</head>
+<body>
+
+<header>
+<div class="site-header">
+    <h1>設定差あるとこ</h1>
+    <p>
+        外から見て分かるような事のみ
+    </p>
+</div>
+<input id="search" type="text" placeholder="🔍 用語を検索..." autocomplete="off">
+<div id="suggestions"></div>
+</header>
+
+<div class="index-bar" id="indexBar"></div>
+<div class="container" id="dictionary"></div>
+
+<script>
+const terms = [
+ {term:"Lカバネリ", reading:"かばねり", description:"3周期の当選率18-37%/下段ベル121-99"},
+ {term:"", reading:"", description:""},
+ 
+];
+
+function getGroup(reading){
+ const c = reading[0];
+ if("あいうえお".includes(c)) return "あ";
+ if("かきくけこがぎぐげご".includes(c)) return "か";
+ if("さしすせそざじずぜぞ".includes(c)) return "さ";
+ if("たちつてとだぢづでど".includes(c)) return "た";
+ if("なにぬねの".includes(c)) return "な";
+ if("はひふへほばびぶべぼぱぴぷぺぽ".includes(c)) return "は";
+ if("まみむめも".includes(c)) return "ま";
+ if("やゆよ".includes(c)) return "や";
+ if("らりるれろ".includes(c)) return "ら";
+ return "わ";
+}
+
+const groups = {};
+terms.forEach(t=>{
+ const g=getGroup(t.reading);
+ (groups[g] ||= []).push(t);
+});
+
+const order=["あ","か","さ","た","な","は","ま","や","ら","わ"];
+const dictionary=document.getElementById("dictionary");
+const indexBar=document.getElementById("indexBar");
+
+order.forEach(group=>{
+ if(!groups[group]) return;
+
+ const btn=document.createElement("button");
+ btn.className="index-btn";
+ btn.textContent=group;
+ btn.onclick=()=>document.getElementById("section-"+group).scrollIntoView({behavior:"smooth"});
+ indexBar.appendChild(btn);
+
+ const section=document.createElement("div");
+ section.innerHTML=`<div class="section-title" id="section-${group}">${group}行</div>`;
+ dictionary.appendChild(section);
+
+ groups[group].forEach(item=>{
+   const card=document.createElement("div");
+   card.className="term-card";
+   card.id="term-"+item.term;
+   card.innerHTML=`
+   <div class="term-title">${item.term}</div>
+   <div class="term-reading">${item.reading}</div>
+   <div>${item.description}</div>`;
+   dictionary.appendChild(card);
+ });
+});
+
+const search=document.getElementById("search");
+const suggestions=document.getElementById("suggestions");
+
+search.addEventListener("input",()=>{
+ const keyword=search.value.trim();
+ suggestions.innerHTML="";
+ if(!keyword) return;
+
+ terms.filter(t=>t.term.includes(keyword)||t.reading.includes(keyword))
+ .forEach(result=>{
+   const div=document.createElement("div");
+   div.className="suggestion";
+   div.innerHTML=`<strong>${result.term}</strong><br><small>${result.reading}</small>`;
+   div.onclick=()=>{
+     document.getElementById("term-"+result.term).scrollIntoView({behavior:"smooth"});
+     suggestions.innerHTML="";
+   };
+   suggestions.appendChild(div);
+ });
+});
+</script>
+
+</body>
+</html>
